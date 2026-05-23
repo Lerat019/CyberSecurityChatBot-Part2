@@ -22,6 +22,7 @@ namespace CyberSecurityChatBot
 
             Label lblLogo = new Label();
             lblLogo.Text =
+
                 "  * * * * * * *\n" +
                 "*               *\n" +
                 "*    \\\\          *\n" +
@@ -32,6 +33,7 @@ namespace CyberSecurityChatBot
                 "  * * * * * * *\n" +
                 "   >> CYBER BOT <<\n" +
                 " Cybersecurity Awareness Assistant";
+
             lblLogo.ForeColor = Color.Magenta;
             lblLogo.Font = new Font("Consolas", 9, FontStyle.Bold);
             lblLogo.Location = new Point(10, 10);
@@ -53,7 +55,7 @@ namespace CyberSecurityChatBot
             TextBox inputBox = new TextBox();
             inputBox.Name = "inputBox";
             inputBox.Location = new Point(10, 510);
-            inputBox.Size = new Size(740, 30);
+            inputBox.Size = new Size(730, 30);
             inputBox.BackColor = Color.FromArgb(20, 20, 35);
             inputBox.ForeColor = Color.White;
             inputBox.Font = new Font("Consolas", 10);
@@ -62,13 +64,29 @@ namespace CyberSecurityChatBot
             Button sendBtn = new Button();
             sendBtn.Name = "sendBtn";
             sendBtn.Text = "Send";
-            sendBtn.Location = new Point(760, 508);
+            sendBtn.Location = new Point(755, 508);
             sendBtn.Size = new Size(110, 32);
             sendBtn.BackColor = Color.FromArgb(100, 200, 100);
             sendBtn.ForeColor = Color.Black;
             sendBtn.Font = new Font("Consolas", 10, FontStyle.Bold);
             sendBtn.Click += SendBtn_Click;
             this.Controls.Add(sendBtn);
+            
+            Button clearBtn = new Button();
+            clearBtn.Name = "clearBtn";
+            clearBtn.Text = "Clear";
+            clearBtn.Location = new Point(755, 545);
+            clearBtn.Size = new Size(110, 32);
+            clearBtn.BackColor = Color.FromArgb(200, 80, 80);
+            clearBtn.ForeColor = Color.White;
+            clearBtn.Font = new Font("Consolas", 10, FontStyle.Bold);
+            clearBtn.Click += (s, e) =>
+            {
+                RichTextBox clearChatBox = this.Controls["chatBox"] as RichTextBox;
+                clearChatBox.Clear();
+                AppendMessage("CyberBot", "Chat cleared! How can I help you?", Color.Cyan);
+            };
+            this.Controls.Add(clearBtn);
 
             inputBox.KeyDown += (s, e) =>
             {
