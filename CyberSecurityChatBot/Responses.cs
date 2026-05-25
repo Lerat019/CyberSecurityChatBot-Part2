@@ -5,55 +5,57 @@ namespace CyberSecurityChatBot
 {
     public class Responses
     {
+        // Random number generator for selecting varied responses
         private static Random random = new Random();
 
+        // Dictionary storing multiple responses for each cybersecurity topic
         private static Dictionary<string, List<string>> topicResponses = new Dictionary<string, List<string>>()
         {
             { "password", new List<string>
-            {
-                "Great question! Use strong passwords with uppercase letters, numbers, and symbols.Never reuse passwords across accounts.",
-                "A strong password should be at least 12 characters long. Consider using a password manager to keep track of them safely.",
-                "Avoid using personal details like your name or birthday in passwords. Use a mix of characters and change them regularly."
-            }
+                {
+                    "Great question! Use strong passwords with uppercase letters, numbers, and symbols. Never reuse passwords across accounts.",
+                    "A strong password should be at least 12 characters long. Consider using a password manager to keep track of them safely.",
+                    "Avoid using personal details like your name or birthday in passwords. Use a mix of characters and change them regularly."
+                }
             },
             { "phishing", new List<string>
-            {
-                "Be careful! Never click suspicious links or download attachments from unknown sources. Always verify the sender's email address.",
-                "Phishing emails often create urgency to trick you. If something feels off, do not click anything and report the email.",
-                "Legitimate organsisations will never ask for sensitive information like your passwords via email. Always go directly to the official website instead."
-            }
+                {
+                    "Be careful! Never click suspicious links or download attachments from unknown sources. Always verify the sender's email address.",
+                    "Phishing emails often create urgency to trick you. If something feels off, do not click anything and report the email.",
+                    "Legitimate organisations will never ask for sensitive information like your passwords via email. Always go directly to the official website instead."
+                }
             },
             { "privacy", new List<string>
-            {
-                "Protect your privacy by limiting what you share online. Review app permissions and turn of anything unnecessary.",
-                "Use a virtual private network (VPN) on public Wi-Fi to keep your data private. Regularly check your privacy setting on social media.",
-                "Be cautious about sharing your ID number, address, or banking details online. Once shared, it is hard to take back."
-            }
+                {
+                    "Protect your privacy by limiting what you share online. Review app permissions and turn off anything unnecessary.",
+                    "Use a virtual private network (VPN) on public Wi-Fi to keep your data private. Regularly check your privacy settings on social media.",
+                    "Be cautious about sharing your ID number, address, or banking details online. Once shared, it is hard to take back."
+                }
             },
             { "scam", new List<string>
-            {
-                "If something sounds too good to be true, it probably is. Never send money or personal information to unverified sources.",
-                "Scammers often pretend to be trusted organisations. Contact the organisation directly using official contact details to verify.",
-                "Common scams include fake job offers,lottery wins, and urgent bank alerts. Always verify before you act."
-            }
+                {
+                    "If something sounds too good to be true, it probably is. Never send money or personal information to unverified sources.",
+                    "Scammers often pretend to be trusted organisations. Contact the organisation directly using official contact details to verify.",
+                    "Common scams include fake job offers, lottery wins, and urgent bank alerts. Always verify before you act."
+                }
             },
             { "malware", new List<string>
-            {
-                "Never download softare from unknown websites. Keep your antivirus updated and run regular scans.",
-                "Malware can steal yiur data or damage your device.Avoid clicking on pop-up ads and only install trusted applications.",
-                "Regularly back up your important files in case of a malware attack. Having backups can help you recover your information."
-            }
+                {
+                    "Never download software from unknown websites. Keep your antivirus updated and run regular scans.",
+                    "Malware can steal your data or damage your device. Avoid clicking on pop-up ads and only install trusted applications.",
+                    "Regularly back up your important files in case of a malware attack. Having backups can help you recover your information."
+                }
             },
             { "safe browsing", new List<string>
-            {
-                "Always check that a website uses HTTPS before entering personal information. Avoid suspicious or unfamiliar websites.",
-                "Clear your browser cache and cookies regularly. Be cautious when using public Wi-Fi networks.",
-                "Use a reputable browser with built-in security features. Avoid downloading files from untusted websites."
+                {
+                    "Always check that a website uses HTTPS before entering personal information. Avoid suspicious or unfamiliar websites.",
+                    "Clear your browser cache and cookies regularly. Be cautious when using public Wi-Fi networks.",
+                    "Use a reputable browser with built-in security features. Avoid downloading files from untrusted websites."
+                }
             }
-            }
+        };
 
-    };
-
+        // Selects a random response from the list for the given topic
         public static string GetRandomResponse(string topic)
         {
             if (topicResponses.ContainsKey(topic))
@@ -64,6 +66,7 @@ namespace CyberSecurityChatBot
             return null;
         }
 
+        // Detects the user's emotional tone from their input
         public static string DetectSentiment(string input)
         {
             if (input.Contains("worried") || input.Contains("scared"))
@@ -77,39 +80,42 @@ namespace CyberSecurityChatBot
             return "neutral";
         }
 
+        // Returns an empathetic opening message based on the detected sentiment
         public static string GetSentimentResponse(string sentiment)
         {
             switch (sentiment)
             {
                 case "worried":
-                    return "I understand your concern, and it is completely valid. Let me help ease your worries.";
+                    return "I understand your concern, and it is completely valid. Let me help ease your worries. ";
                 case "frustrated":
-                    return "I am sorry you are feeling frustrated. Let me try to help make this clearer.";
+                    return "I am sorry you are feeling frustrated. Let me try to help make this clearer. ";
                 case "curious":
-                    return "It's great to see your curiosity! What would you like to know?";
+                    return "It is great to see your curiosity! Here is what you should know. ";
                 case "confused":
-                    return "No worries at all, let me explain this as clear as possible.";
+                    return "No worries at all, let me explain this as clearly as possible. ";
                 default:
                     return "";
-
-
             }
         }
 
+        // Main method that processes user input and returns an appropriate response
         public static string GetResponse(string input, ChatMemory memory)
         {
+            // Detect sentiment and prepare an empathetic opening if needed
             string sentiment = DetectSentiment(input);
             string sentimentOpening = GetSentimentResponse(sentiment);
 
+            // Handle follow-up requests for more information on the last topic
             if (input.Contains("tell me more") || input.Contains("explain more") || input.Contains("more information"))
             {
                 if (!string.IsNullOrEmpty(memory.LastTopic))
                     return sentimentOpening + GetRandomResponse(memory.LastTopic);
                 else
-                    return "Could you let me know which topic you would more information on?";
+                    return "Could you let me know which topic you would like more information on?";
             }
 
-            if(input.Contains("give me another tip") || input.Contains("another tip") || input.Contains("tell me more"))
+            // Handle requests for another tip on the last topic
+            if (input.Contains("give me another tip") || input.Contains("another tip"))
             {
                 if (!string.IsNullOrEmpty(memory.LastTopic))
                     return sentimentOpening + GetRandomResponse(memory.LastTopic);
@@ -117,6 +123,7 @@ namespace CyberSecurityChatBot
                     return "Sure! Which topic would you like another tip on?";
             }
 
+            // Store the users favourite topic in memory
             if (input.Contains("i am interested in") || input.Contains("my favourite topic is") || input.Contains("i like"))
             {
                 foreach (string topic in topicResponses.Keys)
@@ -129,13 +136,16 @@ namespace CyberSecurityChatBot
                 }
             }
 
+            // Check for cybersecurity keywords and return a relevant response
             foreach (string topic in topicResponses.Keys)
             {
                 if (input.Contains(topic))
                 {
+                    // Remember the last topic discussed for follow-up questions
                     memory.LastTopic = topic;
                     string response = sentimentOpening + GetRandomResponse(topic);
 
+                    // Personalise the response if this is the user's favourite topic
                     if (memory.HasFavouriteTopic() && memory.FavouriteTopic == topic)
                         response += " Since " + topic + " is your favourite topic, here is an extra tip: stay updated on the latest threats!";
 
@@ -143,6 +153,7 @@ namespace CyberSecurityChatBot
                 }
             }
 
+            // Handle general conversational inputs
             if (input.Contains("how are you"))
                 return "I am doing great and ready to help you stay safe online!";
 
@@ -152,6 +163,7 @@ namespace CyberSecurityChatBot
             if (input.Contains("help") || input.Contains("topics") || input.Contains("what can"))
                 return "I can help you with the following topics:\n- Password Safety\n- Phishing Awareness\n- Privacy Tips\n- Scam Awareness\n- Malware Protection\n- Safe Browsing";
 
+            // Greet the user and recall their name if stored in memory
             if (input.Contains("hello") || input.Contains("hi"))
             {
                 if (memory.HasName())
@@ -160,6 +172,7 @@ namespace CyberSecurityChatBot
                     return "Hello! I am CyberBot. What is your name?";
             }
 
+            // Store the users name in memory
             if (input.Contains("my name is"))
             {
                 string name = input.Replace("my name is", "").Trim();
@@ -167,12 +180,8 @@ namespace CyberSecurityChatBot
                 return "Nice to meet you, " + name + "! How can I help you stay safe online today?";
             }
 
+            // Default response for unrecognised input
             return "I am not sure I understand that. Could you try rephrasing? You can also type 'help' to see what topics I can assist with.";
         }
     }
 }
-
-
-
-
-
