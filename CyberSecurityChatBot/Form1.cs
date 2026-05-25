@@ -88,6 +88,13 @@ namespace CyberSecurityChatBot
             };
             this.Controls.Add(clearBtn);
 
+            Label lblTopics = new Label();
+            lblTopics.Text = "Topics: password | phishing | privacy | scam | malware | safe browsing";
+            lblTopics.ForeColor = Color.Yellow;
+            lblTopics.Font = new Font("Consolas", 8);
+            lblTopics.Location = new Point(10, 548);
+            lblTopics.Size = new Size(730, 20);
+            this.Controls.Add(lblTopics);
             inputBox.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
