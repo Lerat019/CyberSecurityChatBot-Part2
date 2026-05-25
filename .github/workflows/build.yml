@@ -1,0 +1,23 @@
+name: Build CyberSecurityChatBot
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Restore NuGet packages
+      run: nuget restore CyberSecurityChatBot.sln
+
+    - name: Build solution
+      run: msbuild CyberSecurityChatBot.sln /p:Configuration=Release 
