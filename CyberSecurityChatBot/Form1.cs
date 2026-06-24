@@ -9,6 +9,7 @@ namespace CyberSecurityChatBot
     {
         // Stores user details like name and favourite topic across the conversation
         private ChatMemory memory = new ChatMemory();
+        private DatabaseHelper dbHelper = new DatabaseHelper();
 
         public Form1()
         {
@@ -20,12 +21,36 @@ namespace CyberSecurityChatBot
         // Builds and configures all visual controls on the form
         private void SetupUI()
         {
-            // Set the overall form appearance
             this.BackColor = Color.FromArgb(30, 30, 46);
             this.ForeColor = Color.White;
             this.Font = new Font("Consolas", 10);
+            this.Size = new Size(920, 650);
+            this.Text = "CyberBot - Cybersecurity Awareness Assistant";
 
-            // ASCII art logo displayed at the top of the form
+            // Tab control to hold all features
+            TabControl tabControl = new TabControl();
+            tabControl.Name = "tabControl";
+            tabControl.Location = new Point(10, 10);
+            tabControl.Size = new Size(880, 590);
+            tabControl.BackColor = Color.FromArgb(30, 30, 46);
+            this.Controls.Add(tabControl);
+
+            // Tab 1 - Chat
+            TabPage chatTab = new TabPage("Chat");
+            chatTab.BackColor = Color.FromArgb(30, 30, 46);
+            tabControl.TabPages.Add(chatTab);
+            SetupChatTab(chatTab);
+
+            // Tab 2 - Task Assistant
+            TabPage taskTab = new TabPage("Tasks");
+            taskTab.BackColor = Color.FromArgb(30, 30, 46);
+            tabControl.TabPages.Add(taskTab);
+            SetupTaskTab(taskTab);
+        }
+
+        private void SetupChatTab(TabPage tab)
+        {
+            // ASCII art logo
             Label lblLogo = new Label();
             lblLogo.Text =
                 "  * * * * * * *\n" +
@@ -40,77 +65,220 @@ namespace CyberSecurityChatBot
                 " Cybersecurity Awareness Assistant";
             lblLogo.ForeColor = Color.Magenta;
             lblLogo.Font = new Font("Consolas", 9, FontStyle.Bold);
-            lblLogo.Location = new Point(10, 10);
-            lblLogo.Size = new Size(860, 180);
+            lblLogo.Location = new Point(10, 5);
+            lblLogo.Size = new Size(840, 160);
             lblLogo.TextAlign = ContentAlignment.MiddleCenter;
-            this.Controls.Add(lblLogo);
+            tab.Controls.Add(lblLogo);
 
-            // Chat display area where bot and user messages appear
+            // Chat display
             RichTextBox chatBox = new RichTextBox();
             chatBox.Name = "chatBox";
-            chatBox.Location = new Point(10, 200);
-            chatBox.Size = new Size(860, 300);
+            chatBox.Location = new Point(10, 170);
+            chatBox.Size = new Size(840, 270);
             chatBox.BackColor = Color.FromArgb(20, 20, 35);
             chatBox.ForeColor = Color.LightGreen;
             chatBox.Font = new Font("Consolas", 10);
             chatBox.ReadOnly = true;
             chatBox.ScrollBars = RichTextBoxScrollBars.Vertical;
-            this.Controls.Add(chatBox);
+            tab.Controls.Add(chatBox);
 
-            // Input box where the user types their message
+            // Input box
             TextBox inputBox = new TextBox();
             inputBox.Name = "inputBox";
-            inputBox.Location = new Point(10, 510);
-            inputBox.Size = new Size(730, 30);
+            inputBox.Location = new Point(10, 450);
+            inputBox.Size = new Size(700, 30);
             inputBox.BackColor = Color.FromArgb(20, 20, 35);
             inputBox.ForeColor = Color.White;
             inputBox.Font = new Font("Consolas", 10);
-            this.Controls.Add(inputBox);
+            tab.Controls.Add(inputBox);
 
-            // Send button to submit the users message
+            // Send button
             Button sendBtn = new Button();
             sendBtn.Name = "sendBtn";
             sendBtn.Text = "Send";
-            sendBtn.Location = new Point(755, 508);
-            sendBtn.Size = new Size(110, 32);
+            sendBtn.Location = new Point(720, 448);
+            sendBtn.Size = new Size(80, 30);
             sendBtn.BackColor = Color.FromArgb(100, 200, 100);
             sendBtn.ForeColor = Color.Black;
             sendBtn.Font = new Font("Consolas", 10, FontStyle.Bold);
             sendBtn.Click += SendBtn_Click;
-            this.Controls.Add(sendBtn);
+            tab.Controls.Add(sendBtn);
 
-            // Clear button to reset the chat display
+            // Clear button
             Button clearBtn = new Button();
             clearBtn.Name = "clearBtn";
             clearBtn.Text = "Clear";
-            clearBtn.Location = new Point(755, 545);
-            clearBtn.Size = new Size(110, 32);
+            clearBtn.Location = new Point(810, 448);
+            clearBtn.Size = new Size(50, 30);
             clearBtn.BackColor = Color.FromArgb(200, 80, 80);
             clearBtn.ForeColor = Color.White;
-            clearBtn.Font = new Font("Consolas", 10, FontStyle.Bold);
+            clearBtn.Font = new Font("Consolas", 9, FontStyle.Bold);
             clearBtn.Click += (s, e) =>
             {
-                RichTextBox clearChatBox = this.Controls["chatBox"] as RichTextBox;
-                clearChatBox.Clear();
+                RichTextBox cb = chatBox;
+                cb.Clear();
                 AppendMessage("CyberBot", "Chat cleared! How can I help you?", Color.Cyan);
             };
-            this.Controls.Add(clearBtn);
+            tab.Controls.Add(clearBtn);
 
-            // Label showing available cybersecurity topics to guide the user
+            // Topics label
             Label lblTopics = new Label();
             lblTopics.Text = "Topics: password | phishing | privacy | scam | malware | safe browsing";
             lblTopics.ForeColor = Color.Yellow;
             lblTopics.Font = new Font("Consolas", 8);
-            lblTopics.Location = new Point(10, 548);
-            lblTopics.Size = new Size(730, 20);
-            this.Controls.Add(lblTopics);
+            lblTopics.Location = new Point(10, 485);
+            lblTopics.Size = new Size(700, 20);
+            tab.Controls.Add(lblTopics);
 
-            // Allow the user to press Enter instead of clicking Send
+            // Enter key support
             inputBox.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
                     SendBtn_Click(s, e);
             };
+        }
+
+        private void SetupTaskTab(TabPage tab)
+        {
+            // Title label
+            Label lblTitle = new Label();
+            lblTitle.Text = "TASK ASSISTANT - Manage Your Cybersecurity Tasks";
+            lblTitle.ForeColor = Color.Cyan;
+            lblTitle.Font = new Font("Consolas", 11, FontStyle.Bold);
+            lblTitle.Location = new Point(10, 10);
+            lblTitle.Size = new Size(840, 25);
+            tab.Controls.Add(lblTitle);
+
+            // Task title input
+            Label lblTaskTitle = new Label();
+            lblTaskTitle.Text = "Task Title:";
+            lblTaskTitle.ForeColor = Color.White;
+            lblTaskTitle.Location = new Point(10, 50);
+            lblTaskTitle.Size = new Size(80, 20);
+            tab.Controls.Add(lblTaskTitle);
+
+            TextBox txtTaskTitle = new TextBox();
+            txtTaskTitle.Name = "txtTaskTitle";
+            txtTaskTitle.Location = new Point(100, 48);
+            txtTaskTitle.Size = new Size(350, 25);
+            txtTaskTitle.BackColor = Color.FromArgb(20, 20, 35);
+            txtTaskTitle.ForeColor = Color.White;
+            tab.Controls.Add(txtTaskTitle);
+
+            // Task description input
+            Label lblDesc = new Label();
+            lblDesc.Text = "Description:";
+            lblDesc.ForeColor = Color.White;
+            lblDesc.Location = new Point(10, 85);
+            lblDesc.Size = new Size(85, 20);
+            tab.Controls.Add(lblDesc);
+
+            TextBox txtDesc = new TextBox();
+            txtDesc.Name = "txtDesc";
+            txtDesc.Location = new Point(100, 83);
+            txtDesc.Size = new Size(350, 25);
+            txtDesc.BackColor = Color.FromArgb(20, 20, 35);
+            txtDesc.ForeColor = Color.White;
+            tab.Controls.Add(txtDesc);
+
+            // Reminder date input
+            Label lblReminder = new Label();
+            lblReminder.Text = "Reminder:";
+            lblReminder.ForeColor = Color.White;
+            lblReminder.Location = new Point(10, 120);
+            lblReminder.Size = new Size(85, 20);
+            tab.Controls.Add(lblReminder);
+
+            TextBox txtReminder = new TextBox();
+            txtReminder.Name = "txtReminder";
+            txtReminder.Location = new Point(100, 118);
+            txtReminder.Size = new Size(200, 25);
+            txtReminder.BackColor = Color.FromArgb(20, 20, 35);
+            txtReminder.ForeColor = Color.White;
+            txtReminder.Text = "e.g. 2026-07-01";
+            tab.Controls.Add(txtReminder);
+
+            // Add task button
+            Button btnAddTask = new Button();
+            btnAddTask.Text = "Add Task";
+            btnAddTask.Location = new Point(100, 155);
+            btnAddTask.Size = new Size(100, 30);
+            btnAddTask.BackColor = Color.FromArgb(100, 200, 100);
+            btnAddTask.ForeColor = Color.Black;
+            btnAddTask.Font = new Font("Consolas", 9, FontStyle.Bold);
+            tab.Controls.Add(btnAddTask);
+
+            // Tasks display
+            ListBox lstTasks = new ListBox();
+            lstTasks.Name = "lstTasks";
+            lstTasks.Location = new Point(10, 200);
+            lstTasks.Size = new Size(840, 200);
+            lstTasks.BackColor = Color.FromArgb(20, 20, 35);
+            lstTasks.ForeColor = Color.LightGreen;
+            lstTasks.Font = new Font("Consolas", 9);
+            tab.Controls.Add(lstTasks);
+
+            // Complete and Delete buttons
+            Button btnComplete = new Button();
+            btnComplete.Text = "Mark Complete";
+            btnComplete.Location = new Point(10, 415);
+            btnComplete.Size = new Size(130, 30);
+            btnComplete.BackColor = Color.FromArgb(50, 150, 250);
+            btnComplete.ForeColor = Color.White;
+            btnComplete.Font = new Font("Consolas", 9, FontStyle.Bold);
+            tab.Controls.Add(btnComplete);
+
+            Button btnDelete = new Button();
+            btnDelete.Text = "Delete Task";
+            btnDelete.Location = new Point(150, 415);
+            btnDelete.Size = new Size(110, 30);
+            btnDelete.BackColor = Color.FromArgb(200, 80, 80);
+            btnDelete.ForeColor = Color.White;
+            btnDelete.Font = new Font("Consolas", 9, FontStyle.Bold);
+            tab.Controls.Add(btnDelete);
+
+            // Load tasks into listbox
+            void RefreshTasks()
+            {
+                lstTasks.Items.Clear();
+                foreach (string task in dbHelper.GetAllTasks())
+                    lstTasks.Items.Add(task);
+            }
+
+            // Add task button click
+            btnAddTask.Click += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(txtTaskTitle.Text)) return;
+                dbHelper.AddTask(txtTaskTitle.Text, txtDesc.Text, txtReminder.Text);
+                RefreshTasks();
+                txtTaskTitle.Clear();
+                txtDesc.Clear();
+                txtReminder.Text = "e.g. 2026-07-01";
+                MessageBox.Show("Task added successfully!", "CyberBot", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+
+            // Complete button click
+            btnComplete.Click += (s, e) =>
+            {
+                if (lstTasks.SelectedItem == null) return;
+                string selected = lstTasks.SelectedItem.ToString();
+                int id = int.Parse(selected.Split('.')[0]);
+                dbHelper.CompleteTask(id);
+                RefreshTasks();
+            };
+
+            // Delete button click
+            btnDelete.Click += (s, e) =>
+            {
+                if (lstTasks.SelectedItem == null) return;
+                string selected = lstTasks.SelectedItem.ToString();
+                int id = int.Parse(selected.Split('.')[0]);
+                dbHelper.DeleteTask(id);
+                RefreshTasks();
+            };
+
+            // Load tasks on startup
+            RefreshTasks();
         }
 
         // Runs when the form loads - plays voice greeting and shows welcome message
@@ -151,7 +319,21 @@ namespace CyberSecurityChatBot
         // Appends a coloured message to the chat display area
         private void AppendMessage(string sender, string message, Color color)
         {
-            RichTextBox chatBox = this.Controls["chatBox"] as RichTextBox;
+            RichTextBox chatBox = null;
+
+            // Search inside the tab control for the chatBox
+            TabControl tabControl = this.Controls["tabControl"] as TabControl;
+            if (tabControl != null)
+            {
+                foreach (TabPage tab in tabControl.TabPages)
+                {
+                    chatBox = tab.Controls["chatBox"] as RichTextBox;
+                    if (chatBox != null) break;
+                }
+            }
+
+            if (chatBox == null) return;
+
             chatBox.SelectionStart = chatBox.TextLength;
             chatBox.SelectionLength = 0;
             chatBox.SelectionColor = color;
