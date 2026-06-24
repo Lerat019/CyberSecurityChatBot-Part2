@@ -97,6 +97,7 @@
   <ItemGroup>
     <Compile Include="AudioHelper.cs" />
     <Compile Include="ChatMemory.cs" />
+    <Compile Include="DatabaseHelper.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
