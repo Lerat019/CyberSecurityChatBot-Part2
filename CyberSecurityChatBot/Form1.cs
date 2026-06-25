@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -11,6 +12,7 @@ namespace CyberSecurityChatBot
         private ChatMemory memory = new ChatMemory();
         private DatabaseHelper dbHelper = new DatabaseHelper();
         private QuizManager quizManager = new QuizManager();
+        private List<string> activityLog = new List<string>();
 
         public Form1()
         {
@@ -53,6 +55,12 @@ namespace CyberSecurityChatBot
             quizTab.BackColor = Color.FromArgb(30, 30, 46);
             tabControl.TabPages.Add(quizTab);
             SetupQuizTab(quizTab);
+
+            // Tab 4 - Activity Log
+            TabPage logTab = new TabPage("Activity Log");
+            logTab.BackColor = Color.FromArgb(30, 30, 46);
+            tabControl.TabPages.Add(logTab);
+            SetupLogTab(logTab);
         }
 
         private void SetupChatTab(TabPage tab)
@@ -435,6 +443,60 @@ namespace CyberSecurityChatBot
             btnD.Click += (s, e) => HandleAnswer(3);
         }
 
+        private void SetupLogTab(TabPage tab)
+        {
+            Label lblTitle = new Label();
+            lblTitle.Text = "ACTIVITY LOG - Recent Chatbot Actions";
+            lblTitle.ForeColor = Color.Cyan;
+            lblTitle.Font = new Font("Consolas", 11, FontStyle.Bold);
+            lblTitle.Location = new Point(10, 10);
+            lblTitle.Size = new Size(840, 25);
+            tab.Controls.Add(lblTitle);
+
+            ListBox lstLog = new ListBox();
+            lstLog.Name = "lstLog";
+            lstLog.Location = new Point(10, 45);
+            lstLog.Size = new Size(840, 430);
+            lstLog.BackColor = Color.FromArgb(20, 20, 35);
+            lstLog.ForeColor = Color.LightGreen;
+            lstLog.Font = new Font("Consolas", 9);
+            tab.Controls.Add(lstLog);
+
+            Button btnRefresh = new Button();
+            btnRefresh.Text = "Refresh Log";
+            btnRefresh.Location = new Point(10, 485);
+            btnRefresh.Size = new Size(120, 30);
+            btnRefresh.BackColor = Color.FromArgb(100, 200, 100);
+            btnRefresh.ForeColor = Color.Black;
+            btnRefresh.Font = new Font("Consolas", 9, FontStyle.Bold);
+            tab.Controls.Add(btnRefresh);
+
+            Button btnClearLog = new Button();
+            btnClearLog.Text = "Clear Log";
+            btnClearLog.Location = new Point(140, 485);
+            btnClearLog.Size = new Size(100, 30);
+            btnClearLog.BackColor = Color.FromArgb(200, 80, 80);
+            btnClearLog.ForeColor = Color.White;
+            btnClearLog.Font = new Font("Consolas", 9, FontStyle.Bold);
+            tab.Controls.Add(btnClearLog);
+
+            btnRefresh.Click += (s, e) =>
+            {
+                lstLog.Items.Clear();
+                var recent = activityLog.Count <= 10
+                    ? activityLog
+                    : activityLog.GetRange(activityLog.Count - 10, 10);
+                foreach (string entry in recent)
+                    lstLog.Items.Add(entry);
+            };
+
+            btnClearLog.Click += (s, e) =>
+            {
+                activityLog.Clear();
+                lstLog.Items.Clear();
+            };
+        }
+
         // Runs when the form loads - plays voice greeting and shows welcome message
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -450,24 +512,56 @@ namespace CyberSecurityChatBot
         // Handles sending user messages and displaying bot responses
         private void SendBtn_Click(object sender, EventArgs e)
         {
-            TextBox inputBox = this.Controls["inputBox"] as TextBox;
-            RichTextBox chatBox = this.Controls["chatBox"] as RichTextBox;
+            TabControl tabControl = this.Controls["tabControl"] as TabControl;
+            TextBox inputBox = null;
+            foreach (TabPage tab in tabControl.TabPages)
+            {
+                inputBox = tab.Controls["inputBox"] as TextBox;
+                if (inputBox != null) break;
+            }
 
-            string userInput = inputBox.Text.Trim().ToLower();
+            if (inputBox == null) return;
+            string userInput = inputBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(userInput)) return;
 
-            // Ignore empty input
-            if (string.IsNullOrWhiteSpace(userInput))
-                return;
-
-            // Display the users message in white
-            AppendMessage("You", inputBox.Text.Trim(), Color.White);
+            AppendMessage("You", userInput, Color.White);
             inputBox.Clear();
 
-            // Get the bots response and display it in green
-            string response = Responses.GetResponse(userInput, memory);
-            AppendMessage("CyberBot", response, Color.LightGreen);
+            string lower = userInput.ToLower();
 
-            chatBox.ScrollToCaret();
+            // NLP simulation - detect intent from varied phrasing
+            if (lower.Contains("show activity") || lower.Contains("what have you done") ||
+                lower.Contains("activity log") || lower.Contains("recent actions"))
+            {
+                string log = activityLog.Count == 0 ? "No actions recorded yet." :
+                    string.Join("\n", activityLog.GetRange(
+                        Math.Max(0, activityLog.Count - 10),
+                        Math.Min(10, activityLog.Count)));
+                AppendMessage("CyberBot", "Here is a summary of recent actions:\n" + log, Color.Cyan);
+                LogAction("User viewed activity log via chat");
+                return;
+            }
+
+            if (lower.Contains("add task") || lower.Contains("create task") ||
+                lower.Contains("new task") || lower.Contains("remind me to"))
+            {
+                AppendMessage("CyberBot", "Sure! Head over to the Tasks tab to add your task and set a reminder.", Color.LightGreen);
+                LogAction("NLP detected task request from user");
+                return;
+            }
+
+            if (lower.Contains("start quiz") || lower.Contains("test me") ||
+                lower.Contains("quiz me") || lower.Contains("play quiz"))
+            {
+                AppendMessage("CyberBot", "Great! Switch to the Quiz tab to start the cybersecurity quiz!", Color.LightGreen);
+                LogAction("NLP detected quiz request from user");
+                return;
+            }
+
+            // Get normal chatbot response
+            string response = Responses.GetResponse(lower, memory);
+            AppendMessage("CyberBot", response, Color.LightGreen);
+            LogAction($"Chat response given for input: {userInput}");
         }
 
         // Appends a coloured message to the chat display area
@@ -493,6 +587,12 @@ namespace CyberSecurityChatBot
             chatBox.SelectionColor = color;
             chatBox.AppendText(sender + ": " + message + "\n\n");
             chatBox.SelectionColor = chatBox.ForeColor;
+        }
+
+        private void LogAction(string action)
+        {
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            activityLog.Add($"[{timestamp}] {action}");
         }
     }
 }
