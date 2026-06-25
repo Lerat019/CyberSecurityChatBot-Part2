@@ -10,6 +10,7 @@ namespace CyberSecurityChatBot
         // Stores user details like name and favourite topic across the conversation
         private ChatMemory memory = new ChatMemory();
         private DatabaseHelper dbHelper = new DatabaseHelper();
+        private QuizManager quizManager = new QuizManager();
 
         public Form1()
         {
@@ -46,6 +47,12 @@ namespace CyberSecurityChatBot
             taskTab.BackColor = Color.FromArgb(30, 30, 46);
             tabControl.TabPages.Add(taskTab);
             SetupTaskTab(taskTab);
+
+            // Tab 3 - Quiz
+            TabPage quizTab = new TabPage("Quiz");
+            quizTab.BackColor = Color.FromArgb(30, 30, 46);
+            tabControl.TabPages.Add(quizTab);
+            SetupQuizTab(quizTab);
         }
 
         private void SetupChatTab(TabPage tab)
@@ -279,6 +286,153 @@ namespace CyberSecurityChatBot
 
             // Load tasks on startup
             RefreshTasks();
+        }
+
+        private void SetupQuizTab(TabPage tab)
+        {
+            QuizQuestion lastQuestion = null;
+
+            Label lblTitle = new Label();
+            lblTitle.Text = "CYBERSECURITY MINI QUIZ";
+            lblTitle.ForeColor = Color.Cyan;
+            lblTitle.Font = new Font("Consolas", 11, FontStyle.Bold);
+            lblTitle.Location = new Point(10, 10);
+            lblTitle.Size = new Size(840, 25);
+            tab.Controls.Add(lblTitle);
+
+            Label lblQuestion = new Label();
+            lblQuestion.Name = "lblQuestion";
+            lblQuestion.Text = "Click Start Quiz to begin!";
+            lblQuestion.ForeColor = Color.White;
+            lblQuestion.Font = new Font("Consolas", 10);
+            lblQuestion.Location = new Point(10, 50);
+            lblQuestion.Size = new Size(840, 60);
+            tab.Controls.Add(lblQuestion);
+
+            Button btnA = new Button();
+            btnA.Location = new Point(10, 120);
+            btnA.Size = new Size(840, 35);
+            btnA.BackColor = Color.FromArgb(50, 50, 80);
+            btnA.ForeColor = Color.White;
+            btnA.Font = new Font("Consolas", 9);
+            btnA.TextAlign = ContentAlignment.MiddleLeft;
+            btnA.Visible = false;
+            tab.Controls.Add(btnA);
+
+            Button btnB = new Button();
+            btnB.Location = new Point(10, 162);
+            btnB.Size = new Size(840, 35);
+            btnB.BackColor = Color.FromArgb(50, 50, 80);
+            btnB.ForeColor = Color.White;
+            btnB.Font = new Font("Consolas", 9);
+            btnB.TextAlign = ContentAlignment.MiddleLeft;
+            btnB.Visible = false;
+            tab.Controls.Add(btnB);
+
+            Button btnC = new Button();
+            btnC.Location = new Point(10, 204);
+            btnC.Size = new Size(840, 35);
+            btnC.BackColor = Color.FromArgb(50, 50, 80);
+            btnC.ForeColor = Color.White;
+            btnC.Font = new Font("Consolas", 9);
+            btnC.TextAlign = ContentAlignment.MiddleLeft;
+            btnC.Visible = false;
+            tab.Controls.Add(btnC);
+
+            Button btnD = new Button();
+            btnD.Location = new Point(10, 246);
+            btnD.Size = new Size(840, 35);
+            btnD.BackColor = Color.FromArgb(50, 50, 80);
+            btnD.ForeColor = Color.White;
+            btnD.Font = new Font("Consolas", 9);
+            btnD.TextAlign = ContentAlignment.MiddleLeft;
+            btnD.Visible = false;
+            tab.Controls.Add(btnD);
+
+            Label lblFeedback = new Label();
+            lblFeedback.ForeColor = Color.Yellow;
+            lblFeedback.Font = new Font("Consolas", 9);
+            lblFeedback.Location = new Point(10, 295);
+            lblFeedback.Size = new Size(840, 60);
+            tab.Controls.Add(lblFeedback);
+
+            Label lblScore = new Label();
+            lblScore.Text = "Score: 0";
+            lblScore.ForeColor = Color.LightGreen;
+            lblScore.Font = new Font("Consolas", 10, FontStyle.Bold);
+            lblScore.Location = new Point(10, 365);
+            lblScore.Size = new Size(300, 25);
+            tab.Controls.Add(lblScore);
+
+            Button btnStart = new Button();
+            btnStart.Text = "Start Quiz";
+            btnStart.Location = new Point(10, 400);
+            btnStart.Size = new Size(120, 35);
+            btnStart.BackColor = Color.FromArgb(100, 200, 100);
+            btnStart.ForeColor = Color.Black;
+            btnStart.Font = new Font("Consolas", 10, FontStyle.Bold);
+            tab.Controls.Add(btnStart);
+
+            void LoadQuestion()
+            {
+                lastQuestion = quizManager.GetCurrentQuestion();
+                if (lastQuestion == null) return;
+
+                lblQuestion.Text = $"Q{quizManager.TotalAnswered + 1}: {lastQuestion.Question}";
+                lblFeedback.Text = "";
+
+                var buttons = new[] { btnA, btnB, btnC, btnD };
+                for (int i = 0; i < buttons.Length; i++)
+                {
+                    if (i < lastQuestion.Options.Count)
+                    {
+                        buttons[i].Text = $"  {(char)('A' + i)}) {lastQuestion.Options[i]}";
+                        buttons[i].Visible = true;
+                        buttons[i].BackColor = Color.FromArgb(50, 50, 80);
+                    }
+                    else
+                    {
+                        buttons[i].Visible = false;
+                    }
+                }
+            }
+
+            void HandleAnswer(int index)
+            {
+                string explanation = lastQuestion?.Explanation ?? "";
+                bool correct = quizManager.SubmitAnswer(index);
+
+                lblFeedback.Text = (correct ? "Correct! " : "Wrong! ") + explanation;
+                lblFeedback.ForeColor = correct ? Color.LightGreen : Color.OrangeRed;
+                lblScore.Text = $"Score: {quizManager.Score} / {quizManager.TotalAnswered}";
+
+                if (quizManager.IsFinished())
+                {
+                    lblQuestion.Text = "Quiz Complete! " + quizManager.GetFinalFeedback();
+                    foreach (var b in new[] { btnA, btnB, btnC, btnD })
+                        b.Visible = false;
+                    btnStart.Text = "Restart Quiz";
+                    btnStart.Visible = true;
+                }
+                else
+                {
+                    LoadQuestion();
+                }
+            }
+
+            btnStart.Click += (s, e) =>
+            {
+                quizManager.Reset();
+                lblScore.Text = "Score: 0";
+                lblFeedback.Text = "";
+                btnStart.Visible = false;
+                LoadQuestion();
+            };
+
+            btnA.Click += (s, e) => HandleAnswer(0);
+            btnB.Click += (s, e) => HandleAnswer(1);
+            btnC.Click += (s, e) => HandleAnswer(2);
+            btnD.Click += (s, e) => HandleAnswer(3);
         }
 
         // Runs when the form loads - plays voice greeting and shows welcome message
